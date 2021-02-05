@@ -11,9 +11,9 @@ The package is [registered on PyPI](https://pypi.org/project/PySfMUtils/). Relea
 pip install PySfMUtils
 ```
 
-Development versions can be installed directly from the [GitHub repository](https://github.com/viscenter/sfm-utils):
+Development versions can be installed directly from the [GitLab repository](https://gitlab.com/educelab/sfm-utils):
 ```shell
-python -m pip install -e git+https://github.com/viscenter/sfm-utils.git
+python -m pip install -e git+https://gitlab.com/educelab/sfm-utils.git
 ```
 
 ## Usage
