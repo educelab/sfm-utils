@@ -16,6 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from typing import Union
+
 import numpy as np
 
 from sfm_utils.sfm import Intrinsic, IntrinsicType, Pose, Scene, View
@@ -27,11 +29,23 @@ __AV_INTRINSIC_NAME_MAP = {
 }
 
 
-def scene_to_alicevision(scene: Scene):
+def scene_to_alicevision(scene: Scene,
+                         cob_matrix: Union[np.ndarray, None] = None):
     """
-    Convert Scene to an AliceVision-formatted dict. This dict can be written to a project file with the json package.
+    Convert Scene to an AliceVision-formatted dict. This dict can be written to
+    a project file with the json package. Note: This is currently untested for
+    actual use in MeshRoom.
 
-    Note: This is currently untested for actual use in MeshRoom
+    Parameters
+    ----------
+    scene: Scene
+        Scene to convert.
+    cob_matrix: np.ndarray, None, optional
+        If not None, then a change of basis will be performed by pre-multiplying
+        the Scene's rotation matrices with the provided matrix. If None, no
+        change of basis will be performed. This is in contrast to the interface
+        for sfm_utils.export_scene, which performs a default change of basis
+        when no matrix is provided. (default: None)
     """
 
     def av_view(view: View):
@@ -78,11 +92,18 @@ def scene_to_alicevision(scene: Scene):
         """
         AliceVision Pose struct
         """
+        # Perform change-of-basis if requested
+        if cob_matrix is not None:
+            rot = cob_matrix @ pose.rotation
+        else:
+            rot = pose.rotation
+
         d = {
             "poseId": str(pose.id),
             "pose": {
                 "transform": {
-                    "rotation": [str(i) for i in np.ravel(pose.rotation, order='F').tolist()],
+                    "rotation": [str(i) for i in
+                                 np.ravel(rot, order='F').tolist()],
                     "center": [str(i) for i in pose.center]
                 },
                 "locked": "0"

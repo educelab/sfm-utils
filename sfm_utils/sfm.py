@@ -154,7 +154,8 @@ class Intrinsic(SceneElement):
         Effective lens focal length, in pixels
         """
         if self._focal_length_as_pixels is None:
-            return max(self.width, self.height) * self.focal_length / self.sensor_width
+            return max(self.width,
+                       self.height) * self.focal_length / self.sensor_width
         else:
             return self._focal_length_as_pixels
 
@@ -424,7 +425,8 @@ class Scene:
     def intrinsics(self, intrinsics: List[Intrinsic]):
         self._intrinsics = intrinsics
 
-    def add_intrinsic(self, intrinsic: Intrinsic, group_models: bool = True) -> Intrinsic:
+    def add_intrinsic(self, intrinsic: Intrinsic,
+                      group_models: bool = True) -> Intrinsic:
         """
         Add an Intrinsic to the scene and return the added Intrinsic. The returned Intrinsic should be assigned to the
         associated View object. If `group_models` is True and the passed Intrinsic is identical to one already in the
