@@ -27,9 +27,10 @@ from sfm_utils.sfm import Intrinsic, IntrinsicType, Pose, Scene, View
 
 __OPENMVG_CAMDB_DEFAULT_PATH = '/usr/local/share/openMVG/sensor_width_camera_database.txt'
 
-__OPENMVG_CAMDB_LINE_REGEXP = re.compile(r'("?)(?P<camera>[^"]+)\1;(?P<width>\d+(\.\d*)?)')
+__OPENMVG_CAMDB_LINE_REGEXP = re.compile(
+    r'("?)(?P<camera>[^"]+)\1;(?P<width>\d+(\.\d*)?)')
 
-__OPENMVG_ROT_MAT = np.array([[-1, 0, 0], [0, 1, 0], [0, 0, -1]])
+__OPENMVG_DEFAULT_COB = np.array([[-1, 0, 0], [0, 1, 0], [0, 0, -1]])
 
 __OPENMVG_INTRINSIC_NAME_MAP = {
     IntrinsicType.PINHOLE: 'pinhole',
@@ -43,7 +44,8 @@ __OPENMVG_DIST_NAME_MAP = {
 }
 
 
-def openmvg_load_camdb(db_path: Union[str, bytes, PathLike, None] = None) -> dict:
+def openmvg_load_camdb(
+        db_path: Union[str, bytes, PathLike, None] = None) -> dict:
     """
     Load the OpenMVG camera database file
     """
@@ -68,9 +70,23 @@ def openmvg_load_camdb(db_path: Union[str, bytes, PathLike, None] = None) -> dic
     return d
 
 
-def scene_to_openmvg(scene: Scene, convert_rotations: bool = True):
+def scene_to_openmvg(scene: Scene,
+                     cob_matrix: Union[
+                         np.ndarray, None] = __OPENMVG_DEFAULT_COB):
     """
-    Convert Scene to an OpenMVG-formatted dict. This dict can be written to a project file with the json package.
+    Convert Scene to an OpenMVG-formatted dict. This dict can be written to a
+    project file with the json package.
+
+    Parameters
+    ----------
+    scene: Scene
+        Scene to convert.
+    cob_matrix: np.ndarray, None, optional
+        If not None, then a change of basis will be performed by pre-multiplying
+        the Scene's rotation matrices with the provided matrix. If None, no
+        change of basis will be performed. This is in contrast to the interface
+        for sfm_utils.export_scene, which performs a default change of basis
+        when no matrix is provided. (default: OPENMVG_DEFAULT_COB)
     """
     # Emulate the Cereal pointer counter
     __ptr_cnt = 2147483649
@@ -110,7 +126,8 @@ def scene_to_openmvg(scene: Scene, convert_rotations: bool = True):
             'key': intrinsic.id,
             'value': {
                 'polymorphic_id': 2147483649,
-                "polymorphic_name": __OPENMVG_INTRINSIC_NAME_MAP[intrinsic.type],
+                "polymorphic_name": __OPENMVG_INTRINSIC_NAME_MAP[
+                    intrinsic.type],
                 "ptr_wrapper": {
                     "id": __ptr_cnt,
                     "data": {
@@ -137,11 +154,16 @@ def scene_to_openmvg(scene: Scene, convert_rotations: bool = True):
         """
         OpenMVG Extrinsic struct
         """
+        # Perform change-of-basis if requested
+        if cob_matrix is not None:
+            rot = cob_matrix @ extrinsic.rotation
+        else:
+            rot = extrinsic.rotation
+
         d = {
             "key": extrinsic.id,
             "value": {
-                "rotation": (
-                    __OPENMVG_ROT_MAT @ extrinsic.rotation if convert_rotations else extrinsic.rotation).tolist(),
+                "rotation": rot.tolist(),
                 "center": extrinsic.center
             }
         }

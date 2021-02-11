@@ -1,0 +1,45 @@
+stages:
+  - test
+  - deploy
+
+### Tests ###
+.test:
+  before_script:
+    - python -m pip install --upgrade pip
+    - pip install -r requirements.txt
+  script:
+    - python -m unittest -v test.sfm_utils_tests
+  tags:
+    - docker
+
+test:3.6:
+  extends: .test
+  stage: test
+  image: python:3.6
+
+test:3.7:
+  extends: .test
+  stage: test
+  image: python:3.7
+
+test:3.8:
+  extends: .test
+  stage: test
+  image: python:3.8
+
+test:3.9:
+  extends: .test
+  stage: test
+  image: python:3.9
+
+### Deploy ###
+deploy:pypi:
+  stage: deploy
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v.*$/'
+  image: python:3.6
+  before_script:
+    - python -m pip install --upgrade pip build setuptools wheel twine
+  script:
+    - python3 -m build
+    - python3 -m twine upload dist/*
