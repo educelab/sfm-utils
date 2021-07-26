@@ -20,6 +20,19 @@ class Format(Enum):
     ALICE_VISION = auto()
     COLMAP = auto()
 
+    def __str__(self):
+        return self.name.lower()
+
+    def __repr__(self):
+        return str(self)
+
+    @staticmethod
+    def argparse(s):
+        try:
+            return Format[s.upper()]
+        except KeyError:
+            return s
+
 
 def export_scene(path: Union[str, bytes, PathLike], scene: Scene,
                  fmt: Format = Format.OPEN_MVG,

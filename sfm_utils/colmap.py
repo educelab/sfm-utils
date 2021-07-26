@@ -38,18 +38,24 @@ def scene_to_colmap(scene: Scene, path: Union[str, bytes, PathLike]):
     """
 
     def colmap_intrinsic(intrinsic: Intrinsic) -> str:
+        # Index and intrinsic type
         result = f'{intrinsic.id + 1} ' + __COLMAP_INTRINSIC_NAME_MAP[intrinsic.type]
+        # Image size
         result += f' {intrinsic.width} {intrinsic.height} '
 
+        # Basic pinhole
         if intrinsic.type == IntrinsicType.PINHOLE:
-            result += f'{intrinsic.focal_length} {intrinsic.ppx} {intrinsic.ppy}'
+            result += f'{intrinsic.focal_length_as_pixels} {intrinsic.ppx} {intrinsic.ppy}'
 
+        # Radial K3 (only keeps K1, K1)
         elif intrinsic.type == IntrinsicType.RADIAL_K3:
-            result += f'{intrinsic.focal_length} {intrinsic.ppx} {intrinsic.ppy} ' \
-                      f'{intrinsic.dist_params[0]} {intrinsic.dist_params[1]}'
+            result += f'{intrinsic.focal_length_as_pixels} {intrinsic.ppx} {intrinsic.ppy} '
+            result += f'{intrinsic.dist_params[0]} {intrinsic.dist_params[1]}'
 
+        # Brown T2 (only keeps K1, K2, P1, P2)
         elif intrinsic.type == IntrinsicType.BROWN_T2:
-            result += f'{intrinsic.focal_length} {intrinsic.focal_length} {intrinsic.ppx} {intrinsic.ppy} '
+            result += f'{intrinsic.focal_length_as_pixels} {intrinsic.focal_length_as_pixels} '
+            result += f'{intrinsic.ppx} {intrinsic.ppy} '
             result += " ".join(str(d) for d in intrinsic.dist_params[:4])
         return result
 
