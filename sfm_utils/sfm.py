@@ -17,7 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from abc import ABC
-from enum import auto, Enum
+from enum import Enum, auto
 from os import PathLike
 from pathlib import Path
 from typing import List, Tuple, Union
