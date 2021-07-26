@@ -1,5 +1,5 @@
 import json
-from enum import auto, Enum
+from enum import Enum, auto
 from os import PathLike
 from pathlib import Path
 from typing import Union
@@ -7,7 +7,8 @@ from typing import Union
 import numpy as np
 
 from sfm_utils.alicevision import scene_to_alicevision
-from sfm_utils.openmvg import scene_to_openmvg, __OPENMVG_DEFAULT_COB
+from sfm_utils.colmap import scene_to_colmap
+from sfm_utils.openmvg import __OPENMVG_DEFAULT_COB, scene_to_openmvg
 from sfm_utils.sfm import Scene
 
 
@@ -17,6 +18,20 @@ class Format(Enum):
     """
     OPEN_MVG = auto()
     ALICE_VISION = auto()
+    COLMAP = auto()
+
+    def __str__(self):
+        return self.name.lower()
+
+    def __repr__(self):
+        return str(self)
+
+    @staticmethod
+    def argparse(s):
+        try:
+            return Format[s.upper()]
+        except KeyError:
+            return s
 
 
 def export_scene(path: Union[str, bytes, PathLike], scene: Scene,
@@ -45,6 +60,9 @@ def export_scene(path: Union[str, bytes, PathLike], scene: Scene,
         data = scene_to_openmvg(scene, cob_matrix=cob_matrix)
     elif fmt == Format.ALICE_VISION:
         data = scene_to_alicevision(scene, cob_matrix=cob_matrix)
+    elif fmt == Format.COLMAP:
+        scene_to_colmap(scene, path=path)
+        return
     else:
         raise ValueError('Unknown scene format')
 
