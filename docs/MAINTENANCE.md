@@ -43,7 +43,7 @@ Two smaller notes:
 | Python floor | **3.11+**, matrix 3.11–3.14 | Enables builtin generics and `X \| Y` unions; drops `typing.List/Tuple/Union` (Phase 3) |
 | Version source | **Static in `pyproject.toml`**, bumped manually | No new build deps; requires a release-checklist step (see Risks) |
 | GitLab | **Retired fully** | Delete `.gitlab-ci.yml`, repoint all URLs at GitHub |
-| numpy floor | `>=1.26`, **verified in CI** by a `minimum-deps` job (numpy 1.26.4 on Python 3.11.16, suite passes) | Unaided resolution gives 2.4.6 on 3.11 and 2.5.3 above it, so the floor needed pinning to be tested at all. Kept permissive rather than raised to `>=2.0`: 1.26 demonstrably works, and a consumer with numpy 1.x pinned can still install |
+| numpy floor | **`>=2`**, verified in CI by a `minimum-deps` job pinning `numpy==2.0.*` | Deliberate break with numpy 1.x. 1.26.4 was confirmed working first, so this drops a version that demonstrably functions — the tradeoff is a clean numpy 2-only support story against consumers pinned to numpy 1.x, who can no longer install. Unaided resolution gives 2.4.6 on 3.11 and 2.5.3 above it, so the floor still needs pinning to be exercised at all |
 | `Intrinsic.__eq__` | **Keep comparing derived properties**, made None-safe | Preserves "group by effective calibration" intent while removing the crash (Phase 5) |
 | `Intrinsic.__hash__` | **Deliberately `None`** — declared explicitly, not incidental | Field-based equality over mutable state cannot have a stable hash; locks in the O(n) dedup scan (Phase 5) |
 | Golden fixtures | **Existing two frozen; add new ones with a non-identity rotation** | Never regenerate `openmvg_sfm.json` / `alicevision_sfm.json` (Phase 4b) |
@@ -120,8 +120,9 @@ metadata honest about it.
   rather than Phase 7. The README is the `long_description`, so it is embedded
   verbatim in the wheel METADATA and rendered on PyPI — leaving it stale here would
   ship a package whose own description contradicts its `Requires-Python`.
-- Add a `minimum-deps` CI job pinning `numpy==1.26.*`. Nothing pip resolves on its
-  own goes below 2.4.6, so without this the declared floor is never exercised.
+- Add a `minimum-deps` CI job pinning the floor exactly (`numpy==2.0.*`). Nothing pip
+  resolves on its own goes below 2.4.6, so without this the declared floor is never
+  exercised.
 
 **Acceptance:** `python -m build` succeeds; `twine check dist/*` passes; the wheel
 contains exactly the same five modules as the 1.2.0 baseline wheel and no `test`
