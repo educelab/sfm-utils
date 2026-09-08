@@ -114,6 +114,12 @@ metadata honest about it.
   current behaviour of shipping only `sfm_utils` and excluding `test`.
 - `[project.urls]` pointing at GitHub (Homepage, Repository, Issues).
 - Delete `requirements.txt` — the dependency is declared in one place now.
+- Update the README **Requirements** block (Python 3.6+ / numpy 1.15+) in this phase
+  rather than Phase 7. The README is the `long_description`, so it is embedded
+  verbatim in the wheel METADATA and rendered on PyPI — leaving it stale here would
+  ship a package whose own description contradicts its `Requires-Python`.
+- Add a `minimum-deps` CI job pinning `numpy==1.26.*`. Nothing pip resolves on its
+  own goes below 2.4.6, so without this the declared floor is never exercised.
 
 **Acceptance:** `python -m build` succeeds; `twine check dist/*` passes; the wheel
 contains exactly the same five modules as the 1.2.0 baseline wheel and no `test`
@@ -310,6 +316,13 @@ credential-free release.
   API token stored as a secret** — a strict improvement over the GitLab job.
 - Build sdist and wheel, publish both, attach them to a GitHub Release.
 - Gate the publish on the test matrix passing for that tag.
+
+**Ordering hazard.** Phase 6 sits *before* Phase 7 in this plan, but the README is
+embedded in the wheel METADATA and rendered as the PyPI project page. Publishing
+before the Phase 7 README pass would ship GitLab install instructions to PyPI. The
+Requirements block is handled in Phase 2 for this reason; **the remaining README URL
+fixes and the CHANGELOG must land before the first `v*` tag**, even though they are
+written up under Phase 7.
 
 **One-time manual setup** (cannot be automated from here): register the trusted
 publisher on PyPI for project `PySfMUtils` — owner `educelab`, repository

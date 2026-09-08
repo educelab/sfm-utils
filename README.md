@@ -2,8 +2,8 @@
 A Python package for interacting with Structure-from-Motion (SfM) projects. 
 
 ## Requirements
-* Python 3.6+
-* numpy 1.15+
+* Python 3.11+
+* numpy 1.26+
 
 ## Installation
 The package is [registered on PyPI](https://pypi.org/project/PySfMUtils/). 
