@@ -1,0 +1,47 @@
+name: Test
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12', '3.13', '3.14']
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Install from the package's own metadata rather than requirements.txt, so
+      # CI exercises the real dependency declaration.
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+
+      # numpy resolves to a different major across the matrix (numpy 2.5 requires
+      # Python >= 3.12), so record what each leg actually got.
+      - name: Report resolved environment
+        run: |
+          python -c "import sys; print(sys.version)"
+          python -c "import numpy; print('numpy', numpy.__version__)"
+
+      - name: Run tests
+        run: python -m unittest -v test.sfm_utils_tests

@@ -43,7 +43,7 @@ Two smaller notes:
 | Python floor | **3.11+**, matrix 3.11–3.14 | Enables builtin generics and `X \| Y` unions; drops `typing.List/Tuple/Union` (Phase 3) |
 | Version source | **Static in `pyproject.toml`**, bumped manually | No new build deps; requires a release-checklist step (see Risks) |
 | GitLab | **Retired fully** | Delete `.gitlab-ci.yml`, repoint all URLs at GitHub |
-| numpy floor | `>=1.26` (to verify per matrix leg) | numpy 2.5 requires Python >=3.12, so the 3.11 leg resolves an older numpy — the matrix will prove the floor |
+| numpy floor | `>=1.26` declared. **Measured in CI:** 3.11 resolves numpy 2.4.6; 3.12–3.14 resolve 2.5.3 | Confirms numpy 2.5 requires Python >=3.12. Since every leg lands on numpy 2.4+, Phase 2 could raise the floor to `>=2.0` if dropping numpy 1.x is acceptable |
 | `Intrinsic.__eq__` | **Keep comparing derived properties**, made None-safe | Preserves "group by effective calibration" intent while removing the crash (Phase 5) |
 | `Intrinsic.__hash__` | **Deliberately `None`** — declared explicitly, not incidental | Field-based equality over mutable state cannot have a stable hash; locks in the O(n) dedup scan (Phase 5) |
 | Golden fixtures | **Existing two frozen; add new ones with a non-identity rotation** | Never regenerate `openmvg_sfm.json` / `alicevision_sfm.json` (Phase 4b) |
@@ -76,6 +76,8 @@ the fix ships in the same release as the modernization.
 ---
 
 ## Phase 1 — GitHub Actions CI on the current code
+
+**Status: complete** — PR #2, all four legs green.
 
 **Goal:** get a working safety net *before* changing anything the tests protect.
 
