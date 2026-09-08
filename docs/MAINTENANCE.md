@@ -43,7 +43,7 @@ Two smaller notes:
 | Python floor | **3.11+**, matrix 3.11–3.14 | Enables builtin generics and `X \| Y` unions; drops `typing.List/Tuple/Union` (Phase 3) |
 | Version source | **Static in `pyproject.toml`**, bumped manually | No new build deps; requires a release-checklist step (see Risks) |
 | GitLab | **Retired fully** | Delete `.gitlab-ci.yml`, repoint all URLs at GitHub |
-| numpy floor | `>=1.26` declared. **Measured in CI:** 3.11 resolves numpy 2.4.6; 3.12–3.14 resolve 2.5.3 | Confirms numpy 2.5 requires Python >=3.12. Since every leg lands on numpy 2.4+, Phase 2 could raise the floor to `>=2.0` if dropping numpy 1.x is acceptable |
+| numpy floor | **`>=2`**, verified in CI by a `minimum-deps` job pinning `numpy==2.0.*` | Deliberate break with numpy 1.x. 1.26.4 was confirmed working first, so this drops a version that demonstrably functions — the tradeoff is a clean numpy 2-only support story against consumers pinned to numpy 1.x, who can no longer install. Unaided resolution gives 2.4.6 on 3.11 and 2.5.3 above it, so the floor still needs pinning to be exercised at all |
 | `Intrinsic.__eq__` | **Keep comparing derived properties**, made None-safe | Preserves "group by effective calibration" intent while removing the crash (Phase 5) |
 | `Intrinsic.__hash__` | **Deliberately `None`** — declared explicitly, not incidental | Field-based equality over mutable state cannot have a stable hash; locks in the O(n) dedup scan (Phase 5) |
 | Golden fixtures | **Existing two frozen; add new ones with a non-identity rotation** | Never regenerate `openmvg_sfm.json` / `alicevision_sfm.json` (Phase 4b) |
@@ -98,6 +98,8 @@ metadata honest about it.
 
 ## Phase 2 — Packaging modernization and Python floor
 
+**Status: complete** — PR #3, five jobs green.
+
 **Goal:** one declarative `pyproject.toml`, metadata that matches reality.
 
 - Migrate `setup.cfg` `[metadata]` + `[options]` into `pyproject.toml`
@@ -114,6 +116,13 @@ metadata honest about it.
   current behaviour of shipping only `sfm_utils` and excluding `test`.
 - `[project.urls]` pointing at GitHub (Homepage, Repository, Issues).
 - Delete `requirements.txt` — the dependency is declared in one place now.
+- Update the README **Requirements** block (Python 3.6+ / numpy 1.15+) in this phase
+  rather than Phase 7. The README is the `long_description`, so it is embedded
+  verbatim in the wheel METADATA and rendered on PyPI — leaving it stale here would
+  ship a package whose own description contradicts its `Requires-Python`.
+- Add a `minimum-deps` CI job pinning the floor exactly (`numpy==2.0.*`). Nothing pip
+  resolves on its own goes below 2.4.6, so without this the declared floor is never
+  exercised.
 
 **Acceptance:** `python -m build` succeeds; `twine check dist/*` passes; the wheel
 contains exactly the same five modules as the 1.2.0 baseline wheel and no `test`
@@ -310,6 +319,13 @@ credential-free release.
   API token stored as a secret** — a strict improvement over the GitLab job.
 - Build sdist and wheel, publish both, attach them to a GitHub Release.
 - Gate the publish on the test matrix passing for that tag.
+
+**Ordering hazard.** Phase 6 sits *before* Phase 7 in this plan, but the README is
+embedded in the wheel METADATA and rendered as the PyPI project page. Publishing
+before the Phase 7 README pass would ship GitLab install instructions to PyPI. The
+Requirements block is handled in Phase 2 for this reason; **the remaining README URL
+fixes and the CHANGELOG must land before the first `v*` tag**, even though they are
+written up under Phase 7.
 
 **One-time manual setup** (cannot be automated from here): register the trusted
 publisher on PyPI for project `PySfMUtils` — owner `educelab`, repository
